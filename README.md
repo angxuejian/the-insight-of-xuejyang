@@ -3,15 +3,15 @@
 翻译、博客等。不定期更新
 
 
-<!-- ## Navigation Bar
+## Navigation Bar
 
-### JavaScript
-- One：[保留两位小数](./docs//javascript/two-decimal-places.md)
+### translate
+- [优化JavaScipt即有趣又有益](./translate/optimizing-javascript.md)
 
 
 
-### Css
-- One：[pointer-events](./docs/css/pointer-events.md)
-- Two：[align-content](./docs/css/align-content.md) -->
+### blog
+- [随笔](./blog/1.md)
+
 
 
