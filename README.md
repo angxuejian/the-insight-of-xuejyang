@@ -10,8 +10,8 @@
 
 
 
-### blog
-- [随笔](./blog/1.md)
-
+### record
+- [❄️](./record/1.md)
+- [🤨](./record/2.md)
 
 
