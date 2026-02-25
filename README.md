@@ -45,3 +45,5 @@
 - recipe #5 / [激情海岸](./drink/5.md)
 - recipe #6 / [PaB 乌龙茶](./drink/6.md)
 - recipe #7 / [Purple Afterglow 「紫色余温」](./drink/7.md)
+- recipe #8 / [美人](./drink/8.md)
+- recipe #9 / [绿茶🍵](./drink/9.md)
