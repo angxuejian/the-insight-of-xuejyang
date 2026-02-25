@@ -27,6 +27,8 @@
 - moment #13 · [RIDDIKULUS](./moments/13.md)
 - moment #14 · [Alive](./moments/14.md)
 - moment #15 · [Qiantang One](./moments/15.md)
+- moment #16 · [Peter Dinklage](./moments/16.md)
+- moment #17 · [Self](./moments/17.md)
 
 ### Baseball
 
