@@ -49,12 +49,16 @@
 
 ### Drink
 
-- recipe #1 / [Vowrise](./drink/1.md)
-- recipe #2 / [宝剑嫂+塑料叉FOKU=甜](./drink/2.md)
-- recipe #3 / [螺丝起子](./drink/3.md)
-- recipe #4 / [莫斯科骡子](./drink/4.md)
-- recipe #5 / [激情海岸](./drink/5.md)
-- recipe #6 / [PaB 乌龙茶](./drink/6.md)
-- recipe #7 / [Purple Afterglow 「紫色余温」](./drink/7.md)
-- recipe #8 / [美人](./drink/8.md)
-- recipe #9 / [绿茶🍵](./drink/9.md)
+- #1 / [Vowrise](./drink/1.md)
+- #2 / [宝剑嫂+塑料叉FOKU=甜](./drink/2.md)
+- #3 / [螺丝起子](./drink/3.md)
+- #4 / [莫斯科骡子](./drink/4.md)
+- #5 / [激情海岸](./drink/5.md)
+- #6 / [PaB 乌龙茶](./drink/6.md)
+- #7 / [Purple Afterglow 「紫色余温」](./drink/7.md)
+- #8 / [美人](./drink/8.md)
+- #9 / [绿茶🍵](./drink/9.md)
+
+### Core
+
+- #1 / [Dev](./core/dev.md)
