@@ -62,3 +62,4 @@
 ### Core
 
 - #1 / [Dev](./core/dev.md)
+- #2 / [Build](./core/build.md)
