@@ -71,3 +71,4 @@
 - #5 / [Application to Hardware](./core/application-to-hardware.md)
 - #6 / [Py Sync Async](./core/py-sync-async.md)
 - #7 / [Observer - (Watcher)](./core/observer.md)
+- #8 / [Frontend](./core/frontend.md)
