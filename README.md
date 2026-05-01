@@ -72,3 +72,4 @@
 - #6 / [Py Sync Async](./core/py-sync-async.md)
 - #7 / [Observer - (Watcher)](./core/observer.md)
 - #8 / [Frontend](./core/frontend.md)
+- #9 / [Tree DFS](./core//tree-dfs.md)
