@@ -74,3 +74,4 @@
 - #8 / [Frontend](./core/frontend.md)
 - #9 / [Tree DFS](./core//tree-dfs.md)
 - #10 / [Postgre SQL](./core/pgsql.md)
+- #11 / [ORM](./core/orm.md)
