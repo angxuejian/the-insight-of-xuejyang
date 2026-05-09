@@ -75,3 +75,4 @@
 - #9 / [Tree DFS](./core//tree-dfs.md)
 - #10 / [Postgre SQL](./core/pgsql.md)
 - #11 / [ORM](./core/orm.md)
+- #12 / [Redis](./core/redis.md)
