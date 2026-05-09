@@ -2,14 +2,15 @@
 
 Using SQLAlchemy ORM with Python
 
-
+## Install
+```
 pip install sqlalchemy psycopg[binary] alembic
-
+```
 
 <details>
     <summary>Example</summary>
 
-py
+```py
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, Integer, Float, Boolean, Date, DateTime, TIMESTAMP, func, ForeignKey, Enum as SqlEnum, SmallInteger
 from datetime import datetime, date
@@ -62,8 +63,9 @@ class Order(Base):
 
     user_rel: Mapped["User"] = relationship(back_populates="orders_rel")
 
-
+```
 </details>
+
 
 ## Sqlalchemy
 
