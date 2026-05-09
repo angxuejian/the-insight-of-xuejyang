@@ -78,3 +78,4 @@
 - #12 / [Redis](./core/redis.md)
 - #13 / [Celery](./core/celery.md)
 - #14 / [Nginx](./core/nginx.md)
+- #15 / [Docker](./core/docker.md)
