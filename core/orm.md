@@ -145,7 +145,7 @@ class Order(Base):
 | ---------------------------------------- | --------------------- |
 | alembic init alembic                     | 初始化 Alembic           |
 | alembic revision -m "msg"                | 创建空 migration 文件      |
-| alembic revision --autogenerate -m "msg" | 根据 ORM 自动生成 migration |
+| alembic revision --autogenerate -m "init" | 根据 ORM 自动生成 migration |
 | alembic upgrade head                     | 升级到最新版本               |
 | alembic upgrade +1                       | 升级一个版本                |
 | alembic upgrade <revision>               | 升级到指定版本               |
