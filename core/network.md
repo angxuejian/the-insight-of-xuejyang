@@ -67,3 +67,43 @@ flowchart TB
     E[MAC 寻址（数据链路层）] --> F[网线/WiFi 发送（物理层）]
     F[网线/WiFi 发送（物理层）] --> G[服务器收到]
 ```
+
+## WSL2 backend 局域网访问配置指南
+
+| 命令                                                                                                                   | 作用                                        |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `ip addr`                                                                                                              | 查看 WSL2 的虚拟网卡 IP                     |
+| `netsh interface portproxy show all`                                                                                   | 查看当前 Windows 端口转发规则               |
+| `netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0 listenport=80`                                          | 删除旧的 80 端口转发规则                    |
+| `netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=80 connectaddress=172.30.36.207 connectport=80` | 将 Windows 的 80 端口转发到 WSL2 的 80 端口 |
+| `netsh advfirewall firewall add rule name="FastAPI80" dir=in action=allow protocol=TCP localport=80`                   | 开放 Windows 防火墙 80 端口                 |
+| `uvicorn app.main:app --host 0.0.0.0 --port 80 --reload`                                                               | 启动 FastAPI 并监听所有网卡                 |
+| `http://192.168.3.4`                                                                                                   | 局域网设备访问地址                          |
+
+### 网络结构示意
+
+```
+手机 / 平板 / 其他电脑
+        ↓
+  192.168.3.4:80
+        ↓
+Windows 防火墙
+        ↓
+Windows PortProxy
+        ↓
+172.30.36.207:80
+        ↓
+WSL2 Ubuntu
+        ↓
+FastAPI / Nginx
+```
+
+### 常见问题
+
+| 问题                               | 原因                             |
+| ---------------------------------- | -------------------------------- |
+| localhost 可以访问，局域网 IP 不行 | Windows 防火墙未开放             |
+| 局域网无法访问 WSL2                | 未配置 `portproxy`               |
+| FastAPI 无法被外部访问             | uvicorn 未使用 `--host 0.0.0.0`  |
+| 80 端口无法启动                    | Windows 或其他程序占用了 80 端口 |
+| Docker 内 nginx 无法访问 FastAPI   | `proxy_pass` 地址错误            |
