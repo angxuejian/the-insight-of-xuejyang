@@ -1,67 +1,77 @@
 # Diff
 
-
-| 对比维度 | React | Vue |
-|----------|------|-----|
-| 更新触发方式 | 组件重新 render → 再 diff | 依赖追踪：谁变了 → 更新谁 |
-| 更新粒度 | 组件级 | 节点级（更细粒度） |
-| diff 策略（数组） | 单向遍历 + lastIndex（非最优移动） | 双端 diff + LIS（接近最优移动） |
-| diff 内容（共性） | text / props / 事件 对比 | text / props / 事件 对比 |
-| diff 优化策略 | 运行时 diff（每次 render） | 编译优化（patchFlag / block tree）减少 diff |
-| 渲染机制 | 函数组件重新执行生成新树 | 模板编译 + 响应式依赖追踪 |
-| 调度能力 | 可中断（Fiber）+ 优先级调度 | 默认同步（一次性完成） |
-| 性能优化方向 | 可中断、可调度（保证流畅） | 少比较、少操作（减少 DOM） |
-| 适用场景 | 高频交互、复杂 UI、需要响应优先级 | 稳定更新、CRUD、结构清晰的页面 |
-
-<!-- 
+| 对比维度          | React                              | Vue                                         |
+| ----------------- | ---------------------------------- | ------------------------------------------- |
+| 更新触发方式      | 组件重新 render → 再 diff          | 依赖追踪：谁变了 → 更新谁                   |
+| 更新粒度          | 组件级                             | 节点级（更细粒度）                          |
+| diff 策略（数组） | 单向遍历 + lastIndex（非最优移动） | 双端 diff + LIS（接近最优移动）             |
+| diff 内容（共性） | text / props / 事件 对比           | text / props / 事件 对比                    |
+| diff 优化策略     | 运行时 diff（每次 render）         | 编译优化（patchFlag / block tree）减少 diff |
+| 渲染机制          | 函数组件重新执行生成新树           | 模板编译 + 响应式依赖追踪                   |
+| 调度能力          | 可中断（Fiber）+ 优先级调度        | 默认同步（一次性完成）                      |
+| 性能优化方向      | 可中断、可调度（保证流畅）         | 少比较、少操作（减少 DOM）                  |
+| 适用场景          | 高频交互、复杂 UI、需要响应优先级  | 稳定更新、CRUD、结构清晰的页面              |
 
 ## 单向遍历 + lastIndex
 
 commit（统一更新dom）= 建立节点缓存 -> 先删除 -> 在新增 & 移动
 
+<details>
+  <summary>Example</summary>
+
 ```js
 function diff(oldArr, newArr, key) {
-    const oldMap = new Map();
-    oldArr.forEach((item, index) => {
-        const k = item[key];
-        oldMap.set(k, index);
-    })
+  const oldMap = new Map();
+  oldArr.forEach((item, index) => {
+    const k = item[key];
+    oldMap.set(k, index);
+  });
 
-    let lastIndex = 0;
-    const usedSet = new Set();
+  let lastIndex = 0;
+  const usedSet = new Set();
 
-    newArr.forEach((item, newIndex) => {
-        const k = item[key];
-        const oldIndex = oldMap.get(k);        
-        if (oldIndex === undefined) {
-            console.log(`Item ${k} is new`);
-        } else {
-            usedSet.add(k);
-            if (oldIndex < lastIndex) {
-                console.log(`Item ${k} has moved`);
-            } else {
-                lastIndex = oldIndex;
-            }
-        }
-    })
+  newArr.forEach((item, newIndex) => {
+    const k = item[key];
+    const oldIndex = oldMap.get(k);
+    if (oldIndex === undefined) {
+      console.log(`Item ${k} is new`);
+    } else {
+      usedSet.add(k);
+      if (oldIndex < lastIndex) {
+        console.log(`Item ${k} has moved`);
+      } else {
+        lastIndex = oldIndex;
+      }
+    }
+  });
 
-    oldArr.forEach((item, index) => {
-        const k = item[key];
-        if (!usedSet.has(k)) {
-            console.log(`Item ${k} has been removed`);
-        }
-    })
+  oldArr.forEach((item, index) => {
+    const k = item[key];
+    if (!usedSet.has(k)) {
+      console.log(`Item ${k} has been removed`);
+    }
+  });
 }
 
-const oldArr = [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }, { id: 3, name: 'Charlie' }];
-const newArr = [{ id: 2, name: 'Bob' }, { id: 1, name: 'Alice' }, { id: 4, name: 'David' }];
-diff(oldArr, newArr, 'id');
+const oldArr = [
+  { id: 1, name: "Alice" },
+  { id: 2, name: "Bob" },
+  { id: 3, name: "Charlie" },
+];
+const newArr = [
+  { id: 2, name: "Bob" },
+  { id: 1, name: "Alice" },
+  { id: 4, name: "David" },
+];
+diff(oldArr, newArr, "id");
 
 // Output:
 // Item 1 has moved
 // Item 4 is new
 // Item 3 has been removed
 ```
+
+</details>
 
 ## 双端 diff + LIS
 
@@ -71,197 +81,200 @@ diff(oldArr, newArr, 'id');
 
 移动区 -> LTS -> 决策是移动/新增
 
+<details>
+  <summary>Example</summary>
+
 ```js
-function diff(oldArr, newArr, key) {
+const handleDiff = (oldChildren, newChildren) => {
   let i = 0;
-  let oi = oldArr.length - 1;
-  let ni = newArr.length - 1;
 
-  // --------------------------------------------------------------
-  // 解决头部和尾部相同的情况时，在中间部分新增或删除
+  let oi = oldChildren.length - 1;
+  let ni = newChildren.length - 1;
 
-  // while (i <= oi && i <= ni) {
-  //   if (oldArr[i][key] === newArr[i][key]) {
-  //     i++;
-  //   } else {
-  //     break;
-  //   }
-  // }
+  console.log("oldChildren:", oldChildren);
+  console.log("newChildren:", newChildren);
+  console.log("\n");
 
-  // while (i <= oi && i <= ni) {
-  //   if (oldArr[oi][key] === newArr[ni][key]) {
-  //     oi--;
-  //     ni--;
-  //   } else {
-  //     break;
-  //   }
-  // }
+  // 双端
+  while (i <= oi && i <= ni) {
+    if (oldChildren[i] === newChildren[i]) {
+      console.log("头部相同：", newChildren[i]);
+      i++;
+    } else break;
+  }
 
-  // console.log("i:", i);
-  // console.log("oi:", oi, "ni:", ni);
+  while (i <= oi && i <= ni) {
+    if (oldChildren[oi] === newChildren[ni]) {
+      console.log("尾部相同：", newChildren[ni]);
+      oi--;
+      ni--;
+    } else break;
+  }
 
-  // if (i > oi || i > ni) { 
-  //   console.log("\n------------------------------");
-  //   console.log("解决头部和尾部相同的情况时，在中间部分新增或删除");
+  if (i > oi) {
+    while (i <= ni) {
+      console.log("新增节点：", newChildren[i], `/ index = ${i}`);
+      i++;
+    }
+    return;
+  }
 
-  //    // 纯新增
-  //   if (i > oi) {
-  //       for (let j = i; j <= ni; j++) {
-  //       console.log("纯新增:", newArr[j]);
-  //       }
-  //   }
+  if (i > ni) {
+    while (i <= oi) {
+      console.log("删除节点：", oldChildren[i], `/ index = ${i}`);
+      i++;
+    }
+    return;
+  }
 
-  //   // 纯删除
-  //   if (i > ni) {
-  //       for (let j = i; j <= oi; j++) {
-  //       console.log("纯删除:", oldArr[j]);
-  //       }
-  //   }
-
-  //   console.log("------------------------------\n");
-  //   return;
-  // }
-
-  // --------------------------------------------------------------
-
-
-  console.log(`\n------------------------------`);
-  console.log("进入乱序区域");
-
+  // 乱序部分
+  console.log("\n");
+  console.log("起始位置：", i);
   const osi = i;
   const nsi = i;
 
-  // 构建新数组中 key 到索引的映射
+  //newChildren: key -> newIndex;
   const keyToNewIndexMap = new Map();
   for (let j = nsi; j <= ni; j++) {
-    const item = newArr[j];
-    keyToNewIndexMap.set(item[key], j);
+    keyToNewIndexMap.set(newChildren[j], j);
   }
-  // console.log("keyToNewIndexMap:", keyToNewIndexMap);
+  console.log("newChildren：", keyToNewIndexMap);
 
-  // 构建新数组索引到旧数组索引的映射，初始值为 -1 = 表示新数组中的元素在旧数组中不存在
-  const len = ni - nsi + 1;
-  const newIndexToOldIndex = new Array(len).fill(-1);
+  // newChildren: 乱序区间的长度
+  const length = ni - nsi + 1;
+  const newIndexToOldIndexMap = new Array(length).fill(0);
+  console.log("newIndex to oldIndex - init:", newIndexToOldIndexMap);
 
+  // oldChildren: 遍历
   for (let j = osi; j <= oi; j++) {
-    const oldItem = oldArr[j];
-    const newIndex = keyToNewIndexMap.get(oldItem[key]);
-
-    // 如果 newIndex 是 undefined，说明旧数组中的元素在新数组中不存在，需要删除
+    const oldVNode = oldChildren[j];
+    const newIndex = keyToNewIndexMap.get(oldVNode);
     if (newIndex === undefined) {
-      console.log("删除:", oldItem, "旧索引:", j);
+      console.log(
+        `旧值：${oldVNode}, 旧索引：${j}，新索引：${newIndex} -> 删除`,
+      );
     } else {
-      // 否则，说明旧数组中的元素在新数组中存在，需要移动
-      console.log("决策移动:", oldItem);
-      const ntoIndex = newIndex - nsi; // “把 newArr 的局部索引 → 映射到 从 0 开始的数组”
-      newIndexToOldIndex[ntoIndex] = j;
+      console.log(`复用：${oldVNode}, 旧索引：${j}，新索引：${newIndex}`);
+
+      // +1: Array(length).fill(0) 默认是0，要与其区分出来
+      newIndexToOldIndexMap[newIndex - nsi] = j + 1;
     }
   }
-    console.log("newIndexToOldIndex:", newIndexToOldIndex);
+  console.log("newIndex to oldIndex - update:", newIndexToOldIndexMap);
+  console.log("\n");
 
- 
-  const seq = getLIS(newIndexToOldIndex)
-  console.log("最长递增子序列:", seq);
-  
-  //  return
-  let s = seq.length - 1
-  for (let j = newIndexToOldIndex.length - 1; j >= 0; j--) {
-    if (newIndexToOldIndex[j] === -1) {
-      console.log("新增:", newArr[j + i]);
-    } else if (j !== seq[s]) {
-      console.log("移动:", newArr[j + i]);
+  // 求LIS
+  const LITArray = handleLIS(newIndexToOldIndexMap);
+  console.log("LIS:", LITArray);
+  console.log(
+    "LIS对应的值：",
+    LITArray.map((index) => newIndexToOldIndexMap[index]),
+  );
+  console.log("\n");
+
+  // 倒序处理
+  let l = LITArray.length - 1;
+  let k = newIndexToOldIndexMap.length - 1;
+
+  for (let j = k; j >= 0; j--) {
+    const currentIndex = j + nsi;
+    const currentVNode = newChildren[currentIndex];
+    const anchor =
+      currentIndex + 1 < newChildren.length
+        ? newChildren[currentIndex + 1]
+        : null;
+
+    if (newIndexToOldIndexMap[j] === 0) {
+      console.log("新增节点：", currentVNode, "，插入到：", anchor);
+    } else if (j !== LITArray[l]) {
+      console.log("移动节点：", currentVNode, "，插入到：", anchor);
     } else {
-      s--
+      console.log("不动节点：", currentVNode);
+      l--;
     }
   }
+};
 
-  console.log("------------------------------\n");
-}
+const handleLIS = (arr) => {
+  const p = arr.slice();
 
-function getLIS(arr) {
-  const p = arr.slice() // 记录前驱节点
-  const result = [0]    // 存索引
+  const result = [0];
 
-  for (let i = 0; i < arr.length; i++) {
-    const arrI = arr[i]
+  let i, j, u, v, c;
 
-    // 跳过 -1（Vue diff 用）
-    if (arrI === -1) continue
+  for (i = 0; i < arr.length; i++) {
+    const arrI = arr[i];
 
-    let lastIndex = result[result.length - 1]
+    if (arrI === 0) continue;
 
-    // 1️⃣ 比最大还大 → 直接追加
-    if (arr[lastIndex] < arrI) {
-      p[i] = lastIndex
-      result.push(i)
-      continue
+    j = result[result.length - 1];
+
+    if (arr[j] < arrI) {
+      p[i] = j;
+
+      result.push(i);
+
+      continue;
     }
 
-    // 2️⃣ 二分查找替换位置
-    let start = 0
-    let end = result.length - 1
+    u = 0;
+    v = result.length - 1;
 
-    while (start < end) {
-      const mid = (start + end) >> 1
-      if (arr[result[mid]] < arrI) {
-        start = mid + 1
+    while (u < v) {
+      c = ((u + v) / 2) | 0;
+
+      if (arr[result[c]] < arrI) {
+        u = c + 1;
       } else {
-        end = mid
+        v = c;
       }
     }
 
-    // 替换
-    if (arrI < arr[result[start]]) {
-      if (start > 0) {
-        p[i] = result[start - 1]
+    if (arrI < arr[result[u]]) {
+      if (u > 0) {
+        p[i] = result[u - 1];
       }
-      result[start] = i
+
+      result[u] = i;
     }
   }
 
-  // 3️⃣ 回溯生成最终序列
-  let u = result.length
-  let v = result[u - 1]
+  u = result.length;
+  v = result[u - 1];
 
   while (u-- > 0) {
-    result[u] = v
-    v = p[v]
+    result[u] = v;
+    v = p[v];
   }
 
-  return result
-}
+  return result;
+};
 
-// const oldList = [
-//   { id: 'c', name: 'C' },
-//   { id: 'd', name: 'D' },
-//   { id: 'a', name: 'A' },
-//   { id: 'b', name: 'B' }
-// ]
+const oldArr = ["A", "B", "C", "D"];
+const newArr = ["A", "C", "D", "B", "E", "F"];
+handleDiff(oldArr, newArr);
 
-// const newList = [
-//   { id: 'a', name: 'A' },
-//   { id: 'b', name: 'B' },
-// ]
+// oldChildren: [ 'A', 'B', 'C', 'D' ]
+// newChildren: [ 'A', 'C', 'D', 'B', 'E', 'F' ]
 
-const oldList = [
-  { id: "a", name: "A" },
-  { id: "b", name: "B" },
-  { id: "c", name: "C" },
-  { id: "d", name: "D" },
-];
+// 头部相同： A
 
-const newList = [
-  { id: "b", name: "B" },
-  { id: "d", name: "D" },
-  { id: "a", name: "A" },
-  { id: "c", name: "C" },
+// 起始位置 1
+// newChildren:  Map(5) { 'C' => 1, 'D' => 2, 'B' => 3, 'E' => 4, 'F' => 5 }
+// newIndex to oldIndex - init: [ 0, 0, 0, 0, 0 ]
+// 复用：B, 旧索引：1，新索引：3
+// 复用：C, 旧索引：2，新索引：1
+// 复用：D, 旧索引：3，新索引：2
+// newIndex to oldIndex - update: [ 3, 4, 2, 0, 0 ]
 
-  // { id: "e", name: "E" },
-  // { id: "f", name: "F" },
-];
+// LIS: [ 0, 1 ]
+// LIS对应的值： [ 3, 4 ]
 
-console.log("oldList:", oldList);
-console.log("newList:", newList);
-diff(oldList, newList, "id");
+// 新增节点： F ，插入到： null
+// 新增节点： E ，插入到： F
+// 移动节点： B ，插入到： E
+// 不动节点： D
+// 不动节点： C
+```
 
-``` -->
+</details>

@@ -80,3 +80,4 @@
 - #14 / [Nginx](./core/nginx.md)
 - #15 / [Docker](./core/docker.md)
 - #16 / [Network](./core/network.md)
+- #17 / [Diff](./core/diff.md)
