@@ -5,8 +5,7 @@
 ## Navigation Bar
 
 ## Translate
-- #1 · [0](/translate/0.md)
-- #2 · [CSS Tips](./translate/css.tips.md)
+- #1 · [CSS Tips](./translate/css.tips.md)
 
 ### Nobody care
 
